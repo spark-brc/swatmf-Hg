@@ -49,7 +49,8 @@
       integer i,j,n,col,row,lay,subbasin_id,mf_gridID
       real conc_recharge(ncol,nrow)
       real rivlen,rivNitraten,rivPdsolv,rivHg
-      real no3_mass,p_mass,hg_mass,rchrgn1,rchrgp1,rchrghg1,
+      real no3_mass,p_mass,hg_mass_perc,hg_mass_rech,
+     &     rchrgn1,rchrgp1,rchrghg1,
      &     hru_area_m2,rch_volume
       real riv_Hg_mass,riv_volume
 
@@ -79,13 +80,14 @@
 
         !compute mass of mercury reaching water table
         perchg(n) = sum(Hg_perc(1:3,n)) !total dissolved mercury
+        hg_mass_perc = perchg(n) * hru_ha(n) / 1000. !mg/ha --> g of mercury
         rchrghg1 = 0.
         rchrghg1 = rchrg_hg(n)
         if (rchrghg1 < 1.e-6) rchrghg1 = 0.0
         rchrg_hg(n) = 0.
         rchrg_hg(n) = ((1.- gw_delaye(n)) * perchg(n)) + 
      &               (gw_delaye(n) * rchrghg1)
-        hg_mass = rchrg_hg(n) * hru_ha(n) * 1000. !g of mercury
+        hg_mass_rech = rchrg_hg(n) * hru_ha(n) / 1000. !mg/ha --> g of mercury
         
         !compute volume of recharge water for the HRU
         hru_area_m2 = hru_ha(n) * 10000. !m2
@@ -95,13 +97,17 @@
         if(rch_volume.gt.0) then
           rchrg_no3_conc(n) = no3_mass / rch_volume !g/m3 = mg/L
           rchrg_p_conc(n) = p_mass / rch_volume !g/m3 = mg/L
-          rchrg_hg_conc(n) = hg_mass / rch_volume !g/m3 = mg/L
+          rchrg_hg_conc(n) = hg_mass_rech / rch_volume !g/m3 = mg/L
         else
           rchrg_no3_conc(n) = 0.
           rchrg_p_conc(n) = 0.
           rchrg_hg_conc(n) = 0.
         endif
 
+        !write Hg information to file
+        write(30018,101) n,iyr,iida,hg_mass_perc,hg_mass_rech,
+     &                   rch_volume,rchrg_hg_conc(n)
+        
       enddo
 
       !write out deep percolation values to file
@@ -119,12 +125,6 @@
         write(30014,*) rchrg_p_conc(i)
       enddo
       write(30014,*)
-      write(30018,*) 'Dissolved Hg recharge (mg/L) for each HRU 
-     &                for day',iida,'year',iyr
-      do i=1,nhru
-        write(30018,*) rchrg_hg_conc(i)
-      enddo
-      write(30018,*)
       endif
       endif
 
@@ -235,6 +235,7 @@
 
 
 100   format (1000(f12.4))
+101   format (i8,i8,i8,100(e16.8))
        
       return
       end

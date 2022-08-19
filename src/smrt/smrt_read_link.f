@@ -223,6 +223,7 @@
       if(out_SWATNP_rech.eq.1) then
       open(30018,file='swatmf_out_SWAT_rechhg') !rtb
       write(30018,*) 'SWAT Hg Recharge Conc. (mg/L)'
+      write(30018,*) 'HRU Year Day Perc(g) Rech(g) Vol(m3) Conc(g/m3)'
       endif
       
       endif
